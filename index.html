@@ -1,0 +1,275 @@
+<html lang="en">
+<body>
+
+<div id="result"></div>
+
+<script>
+    let results = {
+        "1970-1999": {
+            "high_CI": [
+                1.0920842976091441,
+                -0.70808825353122762
+            ],
+            "low_CI": [
+                1.0695964847918185,
+                0.33633292932458403
+            ],
+            "lmom_params": [
+                2.4737931,
+                -0.3203023,
+                0.8758841,
+                0.1199602
+            ]
+        },
+        "2040-2069": {
+            "rcp45": {
+                "75th": [
+                    1.0440128593878204,
+                    -0.63583051685723646
+                ],
+                "25th": [
+                    1.041850270521729,
+                    -0.35017135443545166
+                ],
+                "90th": [
+                    1.0081061485924514,
+                    -0.66715800533669922
+                ],
+                "10th": [
+                    1.0996376971536732,
+                    -0.28308245673606658
+                ],
+                "mean": [
+                    1.0408532736644989,
+                    -0.51944081174569279
+                ]
+            },
+            "rcp85": {
+                "75th": [
+                    1.0331029827681282,
+                    -0.78584224885853304
+                ],
+                "25th": [
+                    1.0227836480658707,
+                    -0.43716365653698697
+                ],
+                "90th": [
+                    0.95371721008926025,
+                    -0.89001555857565906
+                ],
+                "10th": [
+                    1.0306423125467756,
+                    -0.28724179862959831
+                ],
+                "mean": [
+                    1.0265817331185378,
+                    -0.68652131923259985
+                ]
+            }
+        },
+        "2070-2099": {
+            "rcp45": {
+                "75th": [
+                    1.0333215769378048,
+                    -0.69923591566731425
+                ],
+                "25th": [
+                    1.0623046599862056,
+                    -0.50925716409083277
+                ],
+                "90th": [
+                    0.94641451485048422,
+                    -0.70003285175341645
+                ],
+                "10th": [
+                    1.0947444902349703,
+                    -0.41761719650113749
+                ],
+                "mean": [
+                    1.048677372156785,
+                    -0.6629028807323647
+                ]
+            },
+            "rcp85": {
+                "75th": [
+                    1.0167587573716976,
+                    -1.0696142570735967
+                ],
+                "25th": [
+                    1.0716468774066306,
+                    -0.77957343914461141
+                ],
+                "90th": [
+                    0.97479806573763772,
+                    -1.3893275837435239
+                ],
+                "10th": [
+                    1.0904015312641684,
+                    -0.62527374530805924
+                ],
+                "mean": [
+                    1.0588742363455304,
+                    -1.0489568523874309
+                ]
+            }
+        },
+        "2010-2039": {
+            "rcp45": {
+                "75th": [
+                    0.98430415308249963,
+                    -0.4075488589998133
+                ],
+                "25th": [
+                    1.0201889618266939,
+                    -0.1553646068533765
+                ],
+                "90th": [
+                    0.9801735528501766,
+                    -0.75612175603013876
+                ],
+                "10th": [
+                    1.0856177818057027,
+                    -0.074279595394862952
+                ],
+                "mean": [
+                    1.0191532502535989,
+                    -0.37086599430060208
+                ]
+            },
+            "rcp85": {
+                "75th": [
+                    1.004564782972686,
+                    -0.51792501618657028
+                ],
+                "25th": [
+                    1.0142651456292799,
+                    -0.20263666667809987
+                ],
+                "90th": [
+                    0.96657427826558939,
+                    -0.72863258124635699
+                ],
+                "10th": [
+                    1.0271932205068504,
+                    -0.0034627447175514803
+                ],
+                "mean": [
+                    1.0138209752867207,
+                    -0.4093192941440793
+                ]
+            }
+        }
+    };
+
+    function getValues(clicked_duration, precip) {
+
+        let final = [];
+        let values = [];
+        var ensem_ptile = ['10th', 'mean', '90th'];
+        var obs_CI = ['low_CI', 'high_CI']
+        var scenario = ['rcp45', 'rcp85'];
+        var decades = ['1970-1999', '2010-2039', '2040-2069', '2070-2099'];
+        var lmom_vals = results['1970-1999']["lmom_params"];
+        var mean_POE = [];
+        var high_CI = [];
+        var low_CI = [];
+        var expon = 1. / lmom_vals[1];
+        var nhr_precip = precip / clicked_duration;
+        var numer_term = (nhr_precip / lmom_vals[0]) - lmom_vals[2];
+        var paren_term = 1. - (lmom_vals[1] * (numer_term / lmom_vals[3]));
+        var exp_term = -1. * Math.pow(paren_term, expon);
+        var Phist = 1. - Math.exp(exp_term);
+        var Rhist = 1. / Phist;
+        var POE_obs = 1 - Math.pow((1 - Phist), 30);
+
+
+        if (Rfut < 1. || paren_term < 0) {
+            POE_obs = 1.0;
+        }
+        ;
+
+
+        mean_POE.push(POE_obs * 100.);
+
+
+        for (c = 0; c < obs_CI.length; c += 1) {
+            var Rfut = Math.exp(results['1970-1999'][obs_CI[c]][0] * Math.log(Rhist) + results['1970-1999'][obs_CI[c]][1]);
+            var Pfut = 1. / Rfut;
+            var POE_fut = 1 - Math.pow((1 - Pfut), 30);
+
+            if (Rfut < 1. || paren_term < 0) {
+                POE_fut = 1.0;
+            }
+            ;
+
+
+            if (c == 0) {
+                low_CI.push(POE_fut * 100.);
+            } else {
+                high_CI.push(POE_fut * 100.);
+            }
+            ;
+        }
+        ;
+
+
+        for (d = 1; d < decades.length; d += 1) {
+            for (s = 0; s < scenario.length; s += 1) {
+                for (c = 0; c < ensem_ptile.length; c += 1) {
+                    var Rfut = Math.exp(results[decades[d]][scenario[s]][ensem_ptile[c]][0] * Math.log(Rhist) + results[decades[d]][scenario[s]][ensem_ptile[c]][1]);
+                    var Pfut = 1. / Rfut;
+                    var POE_fut = 1 - Math.pow((1 - Pfut), 30);
+
+
+                    if (Rfut < 1 || paren_term < 0) {
+                        POE_fut = 1.0;
+                    }
+                    ;
+
+                    if (c == 0) {
+                        low_CI.push(POE_fut * 100.);
+                    } else if (c == 2) {
+                        high_CI.push(POE_fut * 100.);
+                    } else {
+                        mean_POE.push(POE_fut * 100.);
+                    }
+                    ;
+                }
+                ;
+            }
+            ;
+        }
+        ;
+
+
+        values['mean'] = mean_POE;
+        values['low_CI'] = low_CI;
+        values['high_CI'] = high_CI;
+
+
+        return values;
+
+    }
+
+    let durations = {
+        h1: 0.43,
+        h2: 0.54,
+        h3: 0.62,
+        h6: 0.79,
+        h12: 0.97,
+        h18: 1.07,
+        h24: 1.13,
+    };
+    let r = [];
+    for (const [key, value] of Object.entries(durations)) {
+        r.push({
+            "duration": key,
+            "values": Object.assign({}, getValues(value, 4))
+        })
+    }
+
+    document.getElementById("result").innerHTML = JSON.stringify(r);
+
+</script>
+</body>
+</html>
